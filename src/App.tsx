@@ -937,7 +937,7 @@ function QuizGame() {
           <div className="quiz__header">
             <div>
               <p className="quiz__eyebrow">Quiz a risposta multipla</p>
-              <h2>Quanto ne sai di energia sostenibile?</h2>
+              <h2>Quanto ne sai di Banca di Cherasco?</h2>
             </div>
             <div className="quiz__progress">
               <span>
