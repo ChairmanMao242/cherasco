@@ -214,7 +214,7 @@ function App() {
         <img className="hero__logo" src="/banca-di-cherasco-logo.png" alt="Banca di Cherasco" />
         <div className="hero__copy">
           <p className="hero__eyebrow">Banca di Cherasco Mini Games</p>
-          <h1>Un'esperienza di gioco firmata Banca di Cherasco</h1>
+          <h1>Un'esperienza di gioco firmata<br />Banca di Cherasco</h1>
           <p className="hero__subtitle">
             Sfida la fortuna con la ruota o metti alla prova i riflessi raccogliendo le monete in caduta libera.
           </p>
