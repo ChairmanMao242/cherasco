@@ -91,116 +91,89 @@ type CatchEffect = {
 }
 
 const BRICK_TYPES: BrickType[] = [
-  { id: 'light', label: 'Mattone leggero', color: '#66d1f1', points: 1, size: 20 },
-  { id: 'core', label: 'Mattone standard', color: '#00b2e3', points: 2, size: 26 },
-  { id: 'heavy', label: 'Mattone robusto', color: '#007a9c', points: 4, size: 32 },
+  { id: 'bronze', label: 'Moneta di bronzo', color: '#cd7f32', points: 1, size: 20 },
+  { id: 'silver', label: 'Moneta d’argento', color: '#c0c0c0', points: 2, size: 26 },
+  { id: 'gold', label: 'Moneta d’oro', color: '#ffd700', points: 4, size: 32 },
 ]
 
 const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q1',
-    question: 'Qual é il primo passo per ridurre i consumi energetici di un edificio?',
-    options: ['Monitorare i consumi reali', 'Cambiare subito le finestre', 'Aumentare la temperatura', 'Ridurre la ventilazione'],
-    correctIndex: 0,
+    question: 'Qual è la sede principale di Banca di Cherasco?',
+    options: ['Torino', 'Cherasco', 'Cuneo', 'Alba'],
+    correctIndex: 1,
   },
   {
     id: 'q2',
-    question: 'Che cosa indica la sigla ESG?',
-    options: ['Energy Service Grid', 'Environment, Social, Governance', 'Energy Saving Goal', 'Efficient Site Growth'],
+    question: 'Quale prodotto è pensato per gli studenti universitari?',
+    options: ['Conto EVO', 'Conto Università', 'Claris Rent', 'Prestipay'],
     correctIndex: 1,
   },
   {
     id: 'q3',
-    question: 'Qual é una fonte rinnovabile tra queste?',
-    options: ['Gas naturale', 'Carbone', 'Solare', 'Gasolio'],
-    correctIndex: 2,
+    question: 'Cosa offre Claris Rent?',
+    options: ['Mutuo casa', 'Noleggio a lungo termine', 'Conto deposito', 'Carta di credito'],
+    correctIndex: 1,
   },
   {
     id: 'q4',
-    question: 'Un impianto fotovoltaico produce:',
-    options: ['Calore', 'Elettricita', 'Vapore', 'Biogas'],
+    question: 'Quale servizio permette di calcolare la rata del mutuo?',
+    options: ['Iniziative Soci', 'Calcola la rata', 'Conto EVO', 'Conto Università'],
     correctIndex: 1,
   },
   {
     id: 'q5',
-    question: 'Cosa misura la classe energetica di un edificio?',
-    options: ['La distanza dal centro', 'Il consumo energetico', 'Il numero di piani', 'Il tipo di arredi'],
+    question: 'Banca di Cherasco è attiva soprattutto in quale territorio?',
+    options: ['Lombardia', 'Piemonte', 'Veneto', 'Liguria'],
     correctIndex: 1,
   },
   {
     id: 'q6',
-    question: 'Qual é una buona pratica per ridurre sprechi di energia?',
-    options: ['Tenere luci accese', 'Manutenzione regolare impianti', 'Aumentare la potenza', 'Tenere finestre aperte d inverno'],
+    question: 'Quale valore è centrale per Banca di Cherasco?',
+    options: ['Speculazione', 'Sostenibilità', 'Solo profitto', 'Anonimato'],
     correctIndex: 1,
   },
   {
     id: 'q7',
-    question: 'La riqualificazione energetica punta a:',
-    options: ['Aumentare solo la potenza elettrica', 'Ridurre consumi e emissioni', 'Cambiare colori facciata', 'Aggiungere spazio interno'],
-    correctIndex: 1,
+    question: 'Come si chiama la promozione per prestiti personali?',
+    options: ['Prestipay', 'Conto EVO', 'Claris Rent', 'Mutuo Casa'],
+    correctIndex: 0,
   },
   {
     id: 'q8',
-    question: 'Un audit energetico serve a:',
-    options: ['Definire il budget marketing', 'Valutare consumi e inefficienze', 'Cambiare personale', 'Misurare la sicurezza sismica'],
-    correctIndex: 1,
+    question: 'Quale iniziativa è dedicata ai Soci della banca?',
+    options: ['Iniziative Soci', 'Conto Università', 'Claris Rent', 'Calcola la rata'],
+    correctIndex: 0,
   },
   {
     id: 'q9',
-    question: 'Qual é un indicatore di comfort interno?',
-    options: ['CO2 e temperatura', 'Numero di parcheggi', 'Altezza edificio', 'Colore pareti'],
+    question: 'Qual è il canale social ufficiale di Banca di Cherasco?',
+    options: ['Instagram', 'TikTok', 'Snapchat', 'Pinterest'],
     correctIndex: 0,
   },
   {
     id: 'q10',
-    question: 'La gestione smart building aiuta a:',
-    options: ['Aumentare consumi', 'Ridurre controlli', 'Ottimizzare uso energia', 'Spegne tutti i sensori'],
-    correctIndex: 2,
+    question: 'Quale servizio è pensato per i giovani che iniziano a lavorare?',
+    options: ['Conto EVO', 'Prestipay', 'Claris Rent', 'Conto Università'],
+    correctIndex: 0,
   },
 ]
 
 const BRICK_SVG_TEMPLATE = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 605.35 437.32">
-  <path fill="{{c1}}" d="M0,216.22v86.3c0,2.52,1.89,5.67,5.67,7.56v-86.3C1.89,221.89,0,218.74,0,216.22Z"/>
-  <polygon fill="{{c3}}" points="497.01 134.96 497.01 221.26 371.65 149.45 371.65 62.52 497.01 134.96"/>
-  <polygon fill="{{c2}}" points="371.65 62.52 371.65 149.45 107.72 302.52 107.72 216.22 371.65 62.52"/>
-  <path fill="{{c1}}" d="M604.72,134.96q0,.63,0,0v3.78s0,.63-.63.63v.63l-.63.63h0s-.63,0-.63.63c0,0-.63,0-.63.63,0,0-.63,0-.63.63,0,0-.63,0-.63.63v86.3h0s.63,0,.63-.63c0,0,.63,0,.63-.63,0,0,.63,0,.63-.63,0,0,.63,0,.63-.63h0l.63-.63h0s0-.63.63-.63h0v-1.26h0v-1.26h0v-1.26h0v-86.93h0Z"/>
-  <path fill="{{c1}}" d="M371.65,62.52l125.35,72.44-263.94,153.07-125.35-71.81L371.65,62.52ZM277.8,189.76c13.86,8.19,36.54,8.19,50.39,0s13.86-20.79,0-28.98-36.54-8.19-50.39,0c-14.49,8.19-14.49,21.42,0,28.98M356.54,143.78c13.86,8.19,36.54,8.19,50.39,0s13.86-20.79,0-28.98-36.54-8.19-50.39,0-13.86,20.79,0,28.98M198.43,236.38c13.86,8.19,36.54,8.19,50.39,0s13.86-20.79,0-28.98-36.54-8.19-50.39,0c-14.49,7.56-13.86,20.79,0,28.98"/>
-  <polygon fill="{{c5}}" points="497.01 134.96 497.01 221.26 233.07 374.96 233.07 288.03 497.01 134.96"/>
-  <polygon fill="{{c6}}" points="233.07 288.03 233.07 374.96 107.72 302.52 107.72 216.22 233.07 288.03"/>
-  <path fill="{{c4}}" d="M599.69,126.77c7.56,4.41,7.56,11.34,0,15.12l-353.39,205.98c-6.93,4.41-18.9,4.41-26.46,0L5.67,224.41c-7.56-4.41-7.56-11.34,0-15.12L359.06,3.31c6.93-4.41,18.9-4.41,26.46,0l214.17,123.46ZM233.07,288.03l263.94-153.07-125.35-72.44L107.72,216.22l125.35,71.81"/>
-  <path fill="{{c4}}" d="M406.93,114.8c13.86,8.19,13.86,20.79,0,28.98s-36.54,8.19-50.39,0-13.86-20.79,0-28.98c13.86-8.19,36.54-8.19,50.39,0Z"/>
-  <path fill="{{c4}}" d="M327.56,160.79c13.86,8.19,13.86,20.79,0,28.98s-36.54,8.19-50.39,0-13.86-20.79,0-28.98c13.86-7.56,36.54-7.56,50.39,0Z"/>
-  <path fill="{{c4}}" d="M248.19,206.77c13.86,8.19,13.86,20.79,0,28.98-13.86,8.19-36.54,8.19-50.39,0s-13.86-20.79,0-28.98c13.86-7.56,36.54-7.56,50.39,0Z"/>
-  <polygon fill="{{c1}}" points="246.3 347.87 245.67 434.17 599.06 228.82 599.69 142.52 246.3 347.87"/>
-  <polygon fill="{{c1}}" points="5.67 223.78 5.04 310.71 219.84 434.17 219.84 347.87 5.67 223.78"/>
-  <path fill="{{c1}}" d="M245.67,434.17v-86.3c-.63.63-1.89.63-2.52,1.26h-.63c-.63,0-1.26.63-1.89.63s-1.26.63-1.89.63-1.26,0-2.52.63h-8.19c-1.26,0-1.89,0-3.15-.63h-.63c-.63,0-1.89-.63-2.52-.63h-.63c-1.26-.63-1.89-.63-2.52-1.26v86.3c.63.63,1.89.63,2.52,1.26h.63c.63,0,1.26.63,1.89.63h1.89c.63,0,1.26,0,1.89.63h10.71c.63,0,1.26,0,1.89-.63h2.52c1.89-1.89,2.52-1.89,3.15-2.52Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="32" cy="32" r="30" fill="{{c1}}" stroke="#bfa76a" stroke-width="4" />
+  <circle cx="32" cy="32" r="22" fill="{{c2}}" opacity="0.2" />
+  <text x="32" y="38" text-anchor="middle" font-size="22" fill="#fff700" font-family="Arial" font-weight="bold">€</text>
 </svg>`
 
-const BUCKET_SVG = `<?xml version="1.0" encoding="iso-8859-1"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 491.945 491.945" xml:space="preserve">
-<path fill="#76999B" d="M408.11,174.419h-24.009V45.473c0-5.545-4.537-10.082-10.106-10.082H117.948c-5.577,0-10.106,4.537-10.106,10.082v128.945H83.833V45.473c0-18.794,15.305-34.107,34.115-34.107h256.047c18.81,0,34.115,15.313,34.115,34.107V174.419z"/>
-<g>
-  <path fill="#5D7C7C" d="M117.948,35.391c-18.81,0-34.115,15.297-34.115,34.107v104.921h24.009V69.498V45.473c0-5.545,4.529-10.082,10.106-10.082z"/>
-  <path fill="#5D7C7C" d="M373.995,35.391c5.569,0,10.106,4.537,10.106,10.082v24.025v104.921h24.009V69.498c0-18.81-15.305-34.107-34.115-34.107z"/>
-</g>
-<path fill="#8CAFAF" d="M364.606,461.856c0,16.612-13.462,30.082-30.082,30.082H167.439c-16.605,0-30.066-13.47-30.066-30.082l-60.156-284.05c0-16.62,13.462-30.058,30.082-30.058h277.346c16.62,0,30.074,13.438,30.074,30.058L364.606,461.856z"/>
-<path fill="#76999B" d="M77.216,177.814c0-16.62,13.462-30.058,30.082-30.058h277.346c16.62,0,30.074,13.438,30.074,30.058l-50.113,284.05c0,16.612-13.462,30.082-30.082,30.082"/>
-<ellipse fill="#547272" cx="245.972" cy="153.088" rx="148.488" ry="17.006"/>
-<path fill="#3F5655" d="M394.467,153.088c0,9.397-66.481,17.006-148.496,17.006s-148.488-7.609-148.488-17.006"/>
-<circle fill="#9DC1C0" cx="80.879" cy="166.432" r="20.015"/>
-<path fill="#8CAFAF" d="M95.034,152.277c7.814,7.814,7.814,20.488,0,28.302c-7.814,7.814-20.496,7.814-28.302,0.016"/>
-<circle fill="#9DC1C0" cx="411.072" cy="166.432" r="20.007"/>
-<path fill="#8CAFAF" d="M425.227,152.277c7.806,7.814,7.806,20.488,0,28.302c-7.822,7.814-20.512,7.814-28.318,0.016"/>
-<path fill="#FF6D00" d="M307.357,40.393c0,3.489-2.82,6.309-6.309,6.309H190.873c-3.474,0-6.294-2.812-6.294-6.309V6.309c0-3.505,2.812-6.309,6.294-6.309h110.175c3.482,0,6.309,2.796,6.309,6.309V40.393z"/>
-<path fill="#FF8B00" d="M301.055,0H190.873c-3.474,0-6.294,2.796-6.294,6.309v9.405c0,3.482,2.812,6.309,6.294,6.309h110.175c3.482,0,6.309-2.82,6.309-6.309V6.309C307.357,2.804,304.537,0,301.055,0z"/>
-<g>
-  <circle fill="#8CAFAF" cx="163.894" cy="228.407" r="6.002"/>
-  <circle fill="#8CAFAF" cx="204.933" cy="228.407" r="6.002"/>
-  <circle fill="#8CAFAF" cx="245.972" cy="228.407" r="6.01"/>
-  <circle fill="#8CAFAF" cx="286.987" cy="228.407" r="6.002"/>
-  <circle fill="#8CAFAF" cx="328.018" cy="228.407" r="6.002"/>
-</g>
+const BUCKET_SVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <ellipse cx="32" cy="48" rx="20" ry="10" fill="#bfa76a" />
+  <ellipse cx="32" cy="44" rx="16" ry="8" fill="#ffd700" />
+  <rect x="20" y="24" width="24" height="20" rx="12" fill="#ffd700" stroke="#bfa76a" stroke-width="2" />
+  <rect x="28" y="16" width="8" height="8" rx="2" fill="#bfa76a" />
+  <ellipse cx="32" cy="24" rx="12" ry="6" fill="#fff" opacity="0.3" />
+  <text x="32" y="40" text-anchor="middle" font-size="18" fill="#bfa76a" font-family="Arial" font-weight="bold">€</text>
 </svg>`
 
 const createDataUrl = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
@@ -238,12 +211,12 @@ function App() {
   return (
     <div className="app">
       <header className="hero">
-        <img className="hero__logo" src="/logo.svg" alt="Deerns" />
+        <img className="hero__logo" src="/banca-di-cherasco-logo.png" alt="Banca di Cherasco" />
         <div className="hero__copy">
-          <p className="hero__eyebrow">Deerns Mini Games</p>
-          <h1>Un'esperienza di gioco firmata Deerns</h1>
+          <p className="hero__eyebrow">Banca di Cherasco Mini Games</p>
+          <h1>Un'esperienza di gioco firmata Banca di Cherasco</h1>
           <p className="hero__subtitle">
-            Sfida la fortuna con la ruota o metti alla prova i riflessi raccogliendo i mattoni in caduta libera.
+            Sfida la fortuna con la ruota o metti alla prova i riflessi raccogliendo le monete in caduta libera.
           </p>
         </div>
       </header>
@@ -390,7 +363,7 @@ function WheelGame() {
 
     switch (result.result) {
       case 'win':
-        return `Complimenti! Hai vinto: ${result.prize ?? 'premio Deerns'}.`
+        return `Complimenti! Hai vinto: ${result.prize ?? 'premio Banca di Cherasco'}.`
       case 'lose':
         return 'Non questa volta. Riprova domani!'
       case 'already_played':
@@ -513,7 +486,7 @@ function WheelGame() {
             style={{ transform: `rotate(${rotation}deg)` }}
           >
             <div className="wheel__center">
-              <span>Deerns</span>
+              <span>Banca di Cherasco</span>
             </div>
             <ul className="wheel__labels">
               {SEGMENTS.map((segment, index) => (
