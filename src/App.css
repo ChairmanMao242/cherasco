@@ -1,3 +1,11 @@
+/* Prevent coin and money box images from being stretched */
+.legend-item img,
+.game-legend img {
+  object-fit: contain;
+  width: 28px;
+  height: 28px;
+  display: block;
+}
 .app {
   min-height: 100vh;
   padding: 48px 6vw 64px;
@@ -22,7 +30,7 @@
 
 .hero {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 24px;
   position: relative;
   z-index: 1;
@@ -42,6 +50,7 @@
   font-size: clamp(2.3rem, 3vw, 3.4rem);
   letter-spacing: -0.02em;
   margin: 0 0 12px;
+  line-height: 1em;
 }
 
 .hero__subtitle {
@@ -290,7 +299,10 @@
   font-weight: 600;
   color: var(--ink-800);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border 0.2s ease;
 }
 
 .quiz__option:hover {
@@ -496,6 +508,8 @@
   color: var(--cyan-700);
   box-shadow: 0 10px 20px rgba(11, 31, 39, 0.16);
   z-index: 1;
+  text-align: center;
+  line-height: 1em;
 }
 
 .wheel__labels {
@@ -589,5 +603,26 @@
 
   .hero {
     animation: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+  }
+
+  .hero br {
+    display: none;
+  }
+
+  .hero__logo {
+    width: 100px;
+  }
+
+  .app {
+    padding: 24px 4vw 32px;
   }
 }

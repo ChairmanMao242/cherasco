@@ -48,7 +48,7 @@ const normalizePrize = (value: string) => value.toLowerCase().trim().replace(/[^
 
 const GAME_TABS = [
   { id: 'wheel', label: 'Wheel of Fortune' },
-  { id: 'bricks', label: 'Brick Catcher' },
+  { id: 'bricks', label: 'Money Saver' },
   { id: 'quiz', label: 'Quiz' },
 ] as const
 
@@ -90,10 +90,10 @@ type CatchEffect = {
   color: string
 }
 
-const BRICK_TYPES: BrickType[] = [
-  { id: 'bronze', label: 'Moneta di bronzo', color: '#cd7f32', points: 1, size: 20 },
-  { id: 'silver', label: 'Moneta d’argento', color: '#c0c0c0', points: 2, size: 26 },
-  { id: 'gold', label: 'Moneta d’oro', color: '#ffd700', points: 4, size: 32 },
+const BRICK_TYPES: (BrickType & { img: string })[] = [
+  { id: 'bronze', label: 'Moneta di bronzo', color: '#cd7f32', points: 1, size: 32, img: '/bronze.png' },
+  { id: 'silver', label: 'Moneta d’argento', color: '#c0c0c0', points: 2, size: 26, img: '/silver.png' },
+  { id: 'gold', label: 'Moneta d’oro', color: '#ffd700', points: 4, size: 20, img: '/gold.png' },
 ]
 
 const QUIZ_QUESTIONS: QuizQuestion[] = [
@@ -159,51 +159,10 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   },
 ]
 
-const BRICK_SVG_TEMPLATE = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="32" r="30" fill="{{c1}}" stroke="#bfa76a" stroke-width="4" />
-  <circle cx="32" cy="32" r="22" fill="{{c2}}" opacity="0.2" />
-  <text x="32" y="38" text-anchor="middle" font-size="22" fill="#fff700" font-family="Arial" font-weight="bold">€</text>
-</svg>`
 
-const BUCKET_SVG = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <ellipse cx="32" cy="48" rx="20" ry="10" fill="#bfa76a" />
-  <ellipse cx="32" cy="44" rx="16" ry="8" fill="#ffd700" />
-  <rect x="20" y="24" width="24" height="20" rx="12" fill="#ffd700" stroke="#bfa76a" stroke-width="2" />
-  <rect x="28" y="16" width="8" height="8" rx="2" fill="#bfa76a" />
-  <ellipse cx="32" cy="24" rx="12" ry="6" fill="#fff" opacity="0.3" />
-  <text x="32" y="40" text-anchor="middle" font-size="18" fill="#bfa76a" font-family="Arial" font-weight="bold">€</text>
-</svg>`
+const BUCKET_IMG = '/money-box.png'
 
-const createDataUrl = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
 
-const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
-
-const adjustColor = (hex: string, amount: number) => {
-  const normalized = hex.replace('#', '')
-  const num = parseInt(normalized, 16)
-  const r = clamp((num >> 16) + Math.round(255 * amount), 0, 255)
-  const g = clamp(((num >> 8) & 0xff) + Math.round(255 * amount), 0, 255)
-  const b = clamp((num & 0xff) + Math.round(255 * amount), 0, 255)
-  return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
-}
-
-const buildBrickSvg = (baseColor: string) => {
-  const c1 = adjustColor(baseColor, 0.08)
-  const c2 = adjustColor(baseColor, -0.1)
-  const c3 = adjustColor(baseColor, -0.28)
-  const c4 = adjustColor(baseColor, 0.22)
-  const c5 = adjustColor(baseColor, 0.02)
-  const c6 = adjustColor(baseColor, -0.2)
-  return BRICK_SVG_TEMPLATE
-    .replace(/\{\{c1\}\}/g, c1)
-    .replace(/\{\{c2\}\}/g, c2)
-    .replace(/\{\{c3\}\}/g, c3)
-    .replace(/\{\{c4\}\}/g, c4)
-    .replace(/\{\{c5\}\}/g, c5)
-    .replace(/\{\{c6\}\}/g, c6)
-}
 
 function App() {
   const [activeGame, setActiveGame] = useState<GameTab>('wheel')
@@ -211,12 +170,12 @@ function App() {
   return (
     <div className="app">
       <header className="hero">
-        <img className="hero__logo" src="/banca-di-cherasco-logo.png" alt="Banca di Cherasco" />
+        <img className="hero__logo" src="/banca-di-cherasco.png" alt="Banca di Cherasco" />
         <div className="hero__copy">
           <p className="hero__eyebrow">Banca di Cherasco Mini Games</p>
-          <h1>Un'esperienza di gioco firmata<br />Banca di Cherasco</h1>
+          <h1>Un'esperienza di gioco <br /> firmata Banca di Cherasco</h1>
           <p className="hero__subtitle">
-            Sfida la fortuna con la ruota o metti alla prova i riflessi raccogliendo le monete in caduta libera.
+            Sfida la fortuna con la ruota o metti alla prova i riflessi raccogliendo i mattoni in caduta libera.
           </p>
         </div>
       </header>
@@ -547,13 +506,13 @@ function BrickCatcherGame() {
 
   useEffect(() => {
     BRICK_TYPES.forEach((type) => {
-      const image = new Image()
-      image.src = createDataUrl(buildBrickSvg(type.color))
+      const image = new window.Image()
+      image.src = type.img
       brickImagesRef.current.set(type.id, image)
     })
 
-    const bucketImage = new Image()
-    bucketImage.src = createDataUrl(BUCKET_SVG)
+    const bucketImage = new window.Image()
+    bucketImage.src = BUCKET_IMG
     bucketImage.onload = () => {
       if (bucketImage.naturalWidth > 0) {
         bucketAspectRef.current = bucketImage.naturalHeight / bucketImage.naturalWidth
@@ -577,8 +536,8 @@ function BrickCatcherGame() {
       if (ctx) {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       }
-      basketWidthRef.current = Math.min(180, Math.max(100, rect.width * 0.24))
-      basketHeightRef.current = basketWidthRef.current * bucketAspectRef.current
+      basketWidthRef.current = Math.min(100, Math.max(100, rect.width * 0.2))
+      basketHeightRef.current = basketWidthRef.current * .924
       basketXRef.current = rect.width / 2
       basketYRef.current = rect.height - basketHeightRef.current / 1.6
     }
@@ -685,7 +644,7 @@ function BrickCatcherGame() {
       const type = BRICK_TYPES[Math.floor(Math.random() * BRICK_TYPES.length)]
       const widthScale = 2.08
       const brickWidth = type.size * widthScale
-      const brickHeight = type.size
+      const brickHeight = type.size * widthScale
       const x = Math.random() * (width - brickWidth)
       const vy = (150 + Math.random() * 80) * difficulty
       bricksRef.current.push({
@@ -867,7 +826,7 @@ function BrickCatcherGame() {
               <div className="game-overlay">
                 <h2>{status === 'over' ? 'Game Over' : 'Pronto?'}</h2>
                 <p>
-                  Trascina il cestino per raccogliere i mattoni. Dopo 10 mattoni mancati, la partita finisce.
+                  Trascina il salvadanaio per raccogliere le monete. Dopo 10 monete mancati, la partita finisce.
                 </p>
                 <button className="cta" type="button" onClick={startGame}>
                   {status === 'over' ? 'Gioca di nuovo' : 'Inizia la partita'}
@@ -879,7 +838,16 @@ function BrickCatcherGame() {
           <div className="game-legend">
             {BRICK_TYPES.map((type) => (
               <div key={type.id} className="legend-item">
-                <span className="legend-swatch" style={{ background: type.color }} />
+                <img
+                  src={type.img}
+                  alt={type.label}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    objectFit: 'contain',
+                    marginRight: 8,
+                  }}
+                />
                 <div>
                   <strong>{type.points} pt</strong>
                   <span>{type.label}</span>
@@ -937,7 +905,7 @@ function QuizGame() {
           <div className="quiz__header">
             <div>
               <p className="quiz__eyebrow">Quiz a risposta multipla</p>
-              <h2>Quanto ne sai di Banca di Cherasco?</h2>
+              <h2>Quanto ne sai della Banca di Cherasco?</h2>
             </div>
             <div className="quiz__progress">
               <span>
