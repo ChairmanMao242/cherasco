@@ -49,7 +49,7 @@ const normalizePrize = (value: string) => value.toLowerCase().trim().replace(/[^
 const GAME_TABS = [
   { id: 'wheel', label: 'Wheel of Fortune' },
   { id: 'bricks', label: 'Money Saver' },
-  { id: 'quiz', label: 'Quiz' },
+  // { id: 'quiz', label: 'Quiz' }, // Quiz button hidden
 ] as const
 
 type GameTab = (typeof GAME_TABS)[number]['id']
@@ -165,7 +165,7 @@ const BUCKET_IMG = '/money-box.png'
 
 
 function App() {
-  const [activeGame, setActiveGame] = useState<GameTab>('wheel')
+  const [showForm, setShowForm] = useState(true)
 
   return (
     <div className="app">
@@ -175,31 +175,149 @@ function App() {
           <p className="hero__eyebrow">Banca di Cherasco Mini Games</p>
           <h1>Un'esperienza di gioco <br /> firmata Banca di Cherasco</h1>
           <p className="hero__subtitle">
-            Sfida la fortuna con la ruota o metti alla prova i riflessi raccogliendo i mattoni in caduta libera.
+          Accumula, risparmia, vinci!  Corri a raccogliere tutte le monete.<br /> Riuscirai a diventare il miglior risparmiatore del giorno?
           </p>
         </div>
       </header>
 
-      <div className="game-switch">
-        {GAME_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={tab.id === activeGame ? 'is-active' : ''}
-            onClick={() => setActiveGame(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {activeGame === 'wheel' && <WheelGame />}
-      {activeGame === 'bricks' && <BrickCatcherGame />}
-      {activeGame === 'quiz' && <QuizGame />}
+      {/* Only show the form panel at first, then show the Money Saver panel after submit */}
+      {showForm ? (
+        <WheelFormPanel onSubmit={() => setShowForm(false)} />
+      ) : (
+        <BrickCatcherGame />
+      )}
     </div>
   )
 }
 
+// Extracted form panel from WheelGame, disables the wheel and only shows the form
+function WheelFormPanel({ onSubmit }: { onSubmit: () => void }) {
+  const [form, setForm] = useState<FormState>(INITIAL_FORM)
+  const [error, setError] = useState<string>('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const isFormValid = Object.values(form).every((value) => value.trim().length > 0)
+
+  const updateField = (key: keyof FormState) => (event: ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [key]: event.target.value }))
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!isFormValid || isSubmitting) return
+    setIsSubmitting(true)
+    setError('')
+    // Optionally, you can add a call to supabase or validation here
+    // await supabase.rpc('spin_wheel', { ... })
+    setTimeout(() => {
+      setIsSubmitting(false)
+      onSubmit()
+    }, 500) // Simulate async
+  }
+
+  return (
+    <main className="grid">
+      <section className="panel panel--form">
+        <div className="panel__header">
+          <h2>Dati partecipante</h2>
+          <p>Compila il modulo per accedere al gioco Money Saver.</p>
+        </div>
+
+        <form className="form" onSubmit={handleSubmit}>
+          <div className="form__grid">
+            <label className="field">
+              <span>Nome</span>
+              <input
+                type="text"
+                value={form.firstName}
+                onChange={updateField('firstName')}
+                autoComplete="given-name"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Cognome</span>
+              <input
+                type="text"
+                value={form.lastName}
+                onChange={updateField('lastName')}
+                autoComplete="family-name"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Email</span>
+              <input
+                type="email"
+                value={form.email}
+                onChange={updateField('email')}
+                autoComplete="email"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Telefono</span>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={updateField('phone')}
+                autoComplete="tel"
+                required
+              />
+            </label>
+            <label className="field field--full">
+              <span>Indirizzo</span>
+              <input
+                type="text"
+                value={form.address}
+                onChange={updateField('address')}
+                autoComplete="street-address"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>CAP</span>
+              <input
+                type="text"
+                value={form.postalCode}
+                onChange={updateField('postalCode')}
+                autoComplete="postal-code"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Citta</span>
+              <input
+                type="text"
+                value={form.city}
+                onChange={updateField('city')}
+                autoComplete="address-level2"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Provincia</span>
+              <input
+                type="text"
+                value={form.province}
+                onChange={updateField('province')}
+                autoComplete="address-level1"
+                required
+              />
+            </label>
+          </div>
+
+          {error && <p className="form__error">{error}</p>}
+
+          <button className="cta" type="submit" disabled={!isFormValid || isSubmitting}>
+            {isSubmitting ? 'Invio...' : 'Accedi al gioco'}
+          </button>
+          <p className="form__note">Partecipando accetti la privacy policy e il regolamento del concorso.</p>
+        </form>
+      </section>
+    </main>
+  )
+}
 function WheelGame() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [rotation, setRotation] = useState(0)
