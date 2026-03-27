@@ -1,13 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import './App.css'
-import { supabase } from './lib/supabaseClient'
 
 type SpinOutcome = 'win' | 'lose' | 'already_played' | 'out_of_time' | 'no_slots'
 
-type SpinResult = {
-  result: SpinOutcome
-  prize?: string | null
-}
+
 
 type FormState = {
   firstName: string
@@ -20,14 +16,7 @@ type FormState = {
   province: string
 }
 
-const SEGMENTS = [
-  { key: 'tshirt', label: 'Tshirt', type: 'prize' },
-  { key: 'lose-1', label: 'Ritenta', type: 'lose' },
-  { key: 'cappellino', label: 'Cappellino', type: 'prize' },
-  { key: 'lose-2', label: 'Ritenta', type: 'lose' },
-  { key: 'portachiavi', label: 'Portachiavi', type: 'prize' },
-  { key: 'lose-3', label: 'Ritenta', type: 'lose' },
-]
+
 
 const INITIAL_FORM: FormState = {
   firstName: '',
@@ -40,17 +29,7 @@ const INITIAL_FORM: FormState = {
   province: '',
 }
 
-const SPIN_DURATION_MS = 4200
-const SPIN_TURNS = 6
-const START_ANGLE = 0
 
-const normalizePrize = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]/g, '')
-
-const GAME_TABS = [
-  { id: 'wheel', label: 'Wheel of Fortune' },
-  { id: 'bricks', label: 'Money Saver' },
-  // { id: 'quiz', label: 'Quiz' }, // Quiz button hidden
-] as const
 
 
 
@@ -96,68 +75,7 @@ const BRICK_TYPES: (BrickType & { img: string })[] = [
   { id: 'gold', label: 'Moneta d’oro', color: '#ffd700', points: 4, size: 20, img: '/gold.png' },
 ]
 
-const QUIZ_QUESTIONS: QuizQuestion[] = [
-  {
-    id: 'q1',
-    question: 'Qual è la sede principale di Banca di Cherasco?',
-    options: ['Torino', 'Cherasco', 'Cuneo', 'Alba'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q2',
-    question: 'Quale prodotto è pensato per gli studenti universitari?',
-    options: ['Conto EVO', 'Conto Università', 'Claris Rent', 'Prestipay'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q3',
-    question: 'Cosa offre Claris Rent?',
-    options: ['Mutuo casa', 'Noleggio a lungo termine', 'Conto deposito', 'Carta di credito'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q4',
-    question: 'Quale servizio permette di calcolare la rata del mutuo?',
-    options: ['Iniziative Soci', 'Calcola la rata', 'Conto EVO', 'Conto Università'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q5',
-    question: 'Banca di Cherasco è attiva soprattutto in quale territorio?',
-    options: ['Lombardia', 'Piemonte', 'Veneto', 'Liguria'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q6',
-    question: 'Quale valore è centrale per Banca di Cherasco?',
-    options: ['Speculazione', 'Sostenibilità', 'Solo profitto', 'Anonimato'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q7',
-    question: 'Come si chiama la promozione per prestiti personali?',
-    options: ['Prestipay', 'Conto EVO', 'Claris Rent', 'Mutuo Casa'],
-    correctIndex: 0,
-  },
-  {
-    id: 'q8',
-    question: 'Quale iniziativa è dedicata ai Soci della banca?',
-    options: ['Iniziative Soci', 'Conto Università', 'Claris Rent', 'Calcola la rata'],
-    correctIndex: 0,
-  },
-  {
-    id: 'q9',
-    question: 'Qual è il canale social ufficiale di Banca di Cherasco?',
-    options: ['Instagram', 'TikTok', 'Snapchat', 'Pinterest'],
-    correctIndex: 0,
-  },
-  {
-    id: 'q10',
-    question: 'Quale servizio è pensato per i giovani che iniziano a lavorare?',
-    options: ['Conto EVO', 'Prestipay', 'Claris Rent', 'Conto Università'],
-    correctIndex: 0,
-  },
-]
+
 
 
 const BUCKET_IMG = '/money-box.png'
@@ -701,86 +619,7 @@ function BrickCatcherGame() {
         </div>
       </section>
     </main>
-  )
-}
 
 
 
-  return (
-    <main className="grid">
-      <section className="panel panel--wide">
-        <div className="quiz">
-          <div className="quiz__header">
-            <div>
-              <p className="quiz__eyebrow">Quiz a risposta multipla</p>
-              <h2>Quanto ne sai della Banca di Cherasco?</h2>
-            </div>
-            <div className="quiz__progress">
-              <span>
-                Domanda {Math.min(currentIndex + 1, QUIZ_QUESTIONS.length)} / {QUIZ_QUESTIONS.length}
-              </span>
-              <strong>{score} punti</strong>
-            </div>
-          </div>
-
-          <div className="quiz__body">
-            <h3>{currentQuestion.question}</h3>
-            <div className="quiz__options">
-              {currentQuestion.options.map((option, index) => {
-                const isSelected = selectedIndex === index
-                const isCorrect = currentQuestion.correctIndex === index
-                const showFeedback = selectedIndex !== null
-                const statusClass = showFeedback
-                  ? isCorrect
-                    ? 'is-correct'
-                    : isSelected
-                      ? 'is-wrong'
-                      : ''
-                  : ''
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    className={`quiz__option ${statusClass}`}
-                    onClick={() => handleSelect(index)}
-                    disabled={selectedIndex !== null}
-                  >
-                    <span>{option}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="quiz__footer">
-            {selectedIndex !== null && (
-              <p className="quiz__feedback">
-                {selectedIndex === currentQuestion.correctIndex
-                  ? 'Risposta corretta!'
-                  : `Risposta sbagliata. Corretta: ${currentQuestion.options[currentQuestion.correctIndex]}.`}
-              </p>
-            )}
-
-            {!isFinished ? (
-              <button className="cta" type="button" onClick={handleNext} disabled={selectedIndex === null}>
-                {currentIndex === QUIZ_QUESTIONS.length - 1 ? 'Mostra risultato' : 'Prossima domanda'}
-              </button>
-            ) : (
-              <div className="quiz__result">
-                <p>
-                  Hai totalizzato <strong>{score}</strong> risposte corrette su{' '}
-                  <strong>{QUIZ_QUESTIONS.length}</strong>.
-                </p>
-                <button className="cta" type="button" onClick={handleRestart}>
-                  Ricomincia il quiz
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    </main>
-  )
-}
-
-export default App
+export default App;
