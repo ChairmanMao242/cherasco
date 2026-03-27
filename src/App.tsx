@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import './App.css'
+import { supabase } from './lib/supabaseClient'
 
 type SpinOutcome = 'win' | 'lose' | 'already_played' | 'out_of_time' | 'no_slots'
 
-
+type SpinResult = {
+  result: SpinOutcome
+  prize?: string | null
+}
 
 type FormState = {
   firstName: string
@@ -16,7 +20,14 @@ type FormState = {
   province: string
 }
 
-
+const SEGMENTS = [
+  { key: 'tshirt', label: 'Tshirt', type: 'prize' },
+  { key: 'lose-1', label: 'Ritenta', type: 'lose' },
+  { key: 'cappellino', label: 'Cappellino', type: 'prize' },
+  { key: 'lose-2', label: 'Ritenta', type: 'lose' },
+  { key: 'portachiavi', label: 'Portachiavi', type: 'prize' },
+  { key: 'lose-3', label: 'Ritenta', type: 'lose' },
+]
 
 const INITIAL_FORM: FormState = {
   firstName: '',
@@ -29,9 +40,19 @@ const INITIAL_FORM: FormState = {
   province: '',
 }
 
+const SPIN_DURATION_MS = 4200
+const SPIN_TURNS = 6
+const START_ANGLE = 0
 
+const normalizePrize = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]/g, '')
 
+const GAME_TABS = [
+  { id: 'wheel', label: 'Wheel of Fortune' },
+  { id: 'bricks', label: 'Money Saver' },
+  // { id: 'quiz', label: 'Quiz' }, // Quiz button hidden
+] as const
 
+type GameTab = (typeof GAME_TABS)[number]['id']
 
 type QuizQuestion = {
   id: string
@@ -75,7 +96,68 @@ const BRICK_TYPES: (BrickType & { img: string })[] = [
   { id: 'gold', label: 'Moneta d’oro', color: '#ffd700', points: 4, size: 20, img: '/gold.png' },
 ]
 
-
+const QUIZ_QUESTIONS: QuizQuestion[] = [
+  {
+    id: 'q1',
+    question: 'Qual è la sede principale di Banca di Cherasco?',
+    options: ['Torino', 'Cherasco', 'Cuneo', 'Alba'],
+    correctIndex: 1,
+  },
+  {
+    id: 'q2',
+    question: 'Quale prodotto è pensato per gli studenti universitari?',
+    options: ['Conto EVO', 'Conto Università', 'Claris Rent', 'Prestipay'],
+    correctIndex: 1,
+  },
+  {
+    id: 'q3',
+    question: 'Cosa offre Claris Rent?',
+    options: ['Mutuo casa', 'Noleggio a lungo termine', 'Conto deposito', 'Carta di credito'],
+    correctIndex: 1,
+  },
+  {
+    id: 'q4',
+    question: 'Quale servizio permette di calcolare la rata del mutuo?',
+    options: ['Iniziative Soci', 'Calcola la rata', 'Conto EVO', 'Conto Università'],
+    correctIndex: 1,
+  },
+  {
+    id: 'q5',
+    question: 'Banca di Cherasco è attiva soprattutto in quale territorio?',
+    options: ['Lombardia', 'Piemonte', 'Veneto', 'Liguria'],
+    correctIndex: 1,
+  },
+  {
+    id: 'q6',
+    question: 'Quale valore è centrale per Banca di Cherasco?',
+    options: ['Speculazione', 'Sostenibilità', 'Solo profitto', 'Anonimato'],
+    correctIndex: 1,
+  },
+  {
+    id: 'q7',
+    question: 'Come si chiama la promozione per prestiti personali?',
+    options: ['Prestipay', 'Conto EVO', 'Claris Rent', 'Mutuo Casa'],
+    correctIndex: 0,
+  },
+  {
+    id: 'q8',
+    question: 'Quale iniziativa è dedicata ai Soci della banca?',
+    options: ['Iniziative Soci', 'Conto Università', 'Claris Rent', 'Calcola la rata'],
+    correctIndex: 0,
+  },
+  {
+    id: 'q9',
+    question: 'Qual è il canale social ufficiale di Banca di Cherasco?',
+    options: ['Instagram', 'TikTok', 'Snapchat', 'Pinterest'],
+    correctIndex: 0,
+  },
+  {
+    id: 'q10',
+    question: 'Quale servizio è pensato per i giovani che iniziano a lavorare?',
+    options: ['Conto EVO', 'Prestipay', 'Claris Rent', 'Conto Università'],
+    correctIndex: 0,
+  },
+]
 
 
 const BUCKET_IMG = '/money-box.png'
@@ -236,7 +318,282 @@ function WheelFormPanel({ onSubmit }: { onSubmit: () => void }) {
     </main>
   )
 }
+function WheelGame() {
+  const [form, setForm] = useState<FormState>(INITIAL_FORM)
+  const [rotation, setRotation] = useState(0)
+  const [isSpinning, setIsSpinning] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'spinning' | 'done'>('idle')
+  const [result, setResult] = useState<SpinResult | null>(null)
+  const [error, setError] = useState<string>('')
 
+  const loseIndexes = useMemo(
+    () => SEGMENTS.map((segment, index) => (segment.type === 'lose' ? index : -1)).filter((i) => i >= 0),
+    [],
+  )
+
+  const prizeIndexes = useMemo(
+    () =>
+      SEGMENTS.map((segment, index) =>
+        segment.type === 'prize' ? { index, key: segment.key } : null,
+      ).filter((item): item is { index: number; key: string } => Boolean(item)),
+    [],
+  )
+
+  const prizeIndexMap = useMemo(() => {
+    const map = new Map<string, number>()
+    SEGMENTS.forEach((segment, index) => {
+      if (segment.type === 'prize') {
+        map.set(normalizePrize(segment.key), index)
+        map.set(normalizePrize(segment.label), index)
+      }
+    })
+    return map
+  }, [])
+
+  const isFormValid = useMemo(() => {
+    return Object.values(form).every((value) => value.trim().length > 0)
+  }, [form])
+
+  const updateField = (key: keyof FormState) => (event: ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [key]: event.target.value }))
+  }
+
+  const spinToIndex = (targetIndex: number) => {
+    const angle = 360 / SEGMENTS.length
+    const targetAngle = (-START_ANGLE - angle * targetIndex - angle / 2) % 360
+    const normalizedTarget = (targetAngle + 360) % 360
+    setRotation((prev) => {
+      const current = ((prev % 360) + 360) % 360
+      const delta = SPIN_TURNS * 360 + ((normalizedTarget - current + 360) % 360)
+      return prev + delta
+    })
+  }
+
+  const handleSpin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (isSpinning || !isFormValid) {
+      return
+    }
+
+    setError('')
+    setResult(null)
+    setIsSpinning(true)
+    setStatus('spinning')
+
+    const { data, error: spinError } = await supabase.rpc('spin_wheel', {
+      p_first_name: form.firstName,
+      p_last_name: form.lastName,
+      p_email: form.email,
+      p_phone: form.phone,
+      p_address: form.address,
+      p_postal_code: form.postalCode,
+      p_city: form.city,
+      p_province: form.province,
+    })
+
+    if (spinError) {
+      setError('Errore di connessione. Riprova tra poco.')
+      setIsSpinning(false)
+      setStatus('idle')
+      return
+    }
+
+    const outcome = data as SpinResult | null
+    if (!outcome) {
+      setError('Nessuna risposta dal server. Riprova.')
+      setIsSpinning(false)
+      setStatus('idle')
+      return
+    }
+
+    setResult(outcome)
+
+    if (outcome.result === 'win' || outcome.result === 'lose') {
+      let targetIndex = loseIndexes[Math.floor(Math.random() * loseIndexes.length)]
+      if (outcome.result === 'win') {
+        const fallbackPrize = prizeIndexes[Math.floor(Math.random() * prizeIndexes.length)]
+        targetIndex = fallbackPrize.index
+        if (outcome.prize) {
+          const normalizedPrize = normalizePrize(outcome.prize)
+          const mappedIndex = prizeIndexMap.get(normalizedPrize)
+          if (mappedIndex !== undefined) {
+            targetIndex = mappedIndex
+          }
+        }
+      }
+
+      spinToIndex(targetIndex)
+      window.setTimeout(() => {
+        setIsSpinning(false)
+        setStatus('done')
+      }, SPIN_DURATION_MS)
+    } else {
+      setIsSpinning(false)
+      setStatus('done')
+    }
+  }
+
+  const resultMessage = useMemo(() => {
+    if (!result) {
+      return 'Inserisci i tuoi dati e gira la ruota per scoprire il premio.'
+    }
+
+    switch (result.result) {
+      case 'win':
+        return `Complimenti! Hai vinto: ${result.prize ?? 'premio Banca di Cherasco'}.`
+      case 'lose':
+        return 'Non questa volta. Riprova domani!'
+      case 'already_played':
+        return 'Hai gia giocato oggi con questi dati.'
+      case 'out_of_time':
+        return 'La ruota si attiva dalle 8:00 alle 20:00.'
+      case 'no_slots':
+        return 'Premi non ancora disponibili oggi. Riprova piu tardi.'
+      default:
+        return 'Riprova piu tardi.'
+    }
+  }, [result])
+
+  return (
+    <main className="grid">
+      <section className="panel panel--form">
+        <div className="panel__header">
+          <h2>Dati partecipante</h2>
+          <p>Un solo giro al giorno per email e telefono.</p>
+        </div>
+
+        <form className="form" onSubmit={handleSpin}>
+          <div className="form__grid">
+            <label className="field">
+              <span>Nome</span>
+              <input
+                type="text"
+                value={form.firstName}
+                onChange={updateField('firstName')}
+                autoComplete="given-name"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Cognome</span>
+              <input
+                type="text"
+                value={form.lastName}
+                onChange={updateField('lastName')}
+                autoComplete="family-name"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Email</span>
+              <input
+                type="email"
+                value={form.email}
+                onChange={updateField('email')}
+                autoComplete="email"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Telefono</span>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={updateField('phone')}
+                autoComplete="tel"
+                required
+              />
+            </label>
+            <label className="field field--full">
+              <span>Indirizzo</span>
+              <input
+                type="text"
+                value={form.address}
+                onChange={updateField('address')}
+                autoComplete="street-address"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>CAP</span>
+              <input
+                type="text"
+                value={form.postalCode}
+                onChange={updateField('postalCode')}
+                autoComplete="postal-code"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Citta</span>
+              <input
+                type="text"
+                value={form.city}
+                onChange={updateField('city')}
+                autoComplete="address-level2"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Provincia</span>
+              <input
+                type="text"
+                value={form.province}
+                onChange={updateField('province')}
+                autoComplete="address-level1"
+                required
+              />
+            </label>
+          </div>
+
+          {error && <p className="form__error">{error}</p>}
+
+          <button className="cta" type="submit" disabled={!isFormValid || isSpinning}>
+            {isSpinning ? 'Sto girando...' : 'Gira la ruota'}
+          </button>
+          <p className="form__note">Partecipando accetti la privacy policy e il regolamento del concorso.</p>
+        </form>
+      </section>
+
+      <section className="panel panel--wheel">
+        <div className="wheel__wrap">
+          <div className="wheel__pointer" />
+          <div
+            className={`wheel ${status === 'spinning' ? 'wheel--spinning' : ''}`}
+            style={{ transform: `rotate(${rotation}deg)` }}
+          >
+            <div className="wheel__center">
+              <span>Banca di Cherasco</span>
+            </div>
+            <ul className="wheel__labels">
+              {SEGMENTS.map((segment, index) => (
+                <li
+                  key={segment.key}
+                  style={{
+                    transform: `rotate(${(360 / SEGMENTS.length) * (index + 0.5)}deg)`,
+                  }}
+                >
+                  <span>{segment.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="wheel__meta">
+          <h2>Premi in palio</h2>
+          <div className="chips">
+            <span>Tshirt</span>
+            <span>Cappellino</span>
+            <span>Portachiavi</span>
+          </div>
+          <p className="wheel__message">{resultMessage}</p>
+          <p className="wheel__schedule">Orario di gioco: 8:00 - 20:00</p>
+        </div>
+      </section>
+    </main>
+  )
+}
 
 function BrickCatcherGame() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -619,7 +976,121 @@ function BrickCatcherGame() {
         </div>
       </section>
     </main>
+  )
+}
 
+function QuizGame() {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [score, setScore] = useState(0)
+  const [isFinished, setIsFinished] = useState(false)
 
+  const currentQuestion = QUIZ_QUESTIONS[currentIndex]
 
-export default App;
+  const handleSelect = (index: number) => {
+    if (selectedIndex !== null || isFinished) {
+      return
+    }
+    setSelectedIndex(index)
+    if (index === currentQuestion.correctIndex) {
+      setScore((prev) => prev + 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (selectedIndex === null) {
+      return
+    }
+    if (currentIndex === QUIZ_QUESTIONS.length - 1) {
+      setIsFinished(true)
+      return
+    }
+    setCurrentIndex((prev) => prev + 1)
+    setSelectedIndex(null)
+  }
+
+  const handleRestart = () => {
+    setCurrentIndex(0)
+    setSelectedIndex(null)
+    setScore(0)
+    setIsFinished(false)
+  }
+
+  return (
+    <main className="grid">
+      <section className="panel panel--wide">
+        <div className="quiz">
+          <div className="quiz__header">
+            <div>
+              <p className="quiz__eyebrow">Quiz a risposta multipla</p>
+              <h2>Quanto ne sai della Banca di Cherasco?</h2>
+            </div>
+            <div className="quiz__progress">
+              <span>
+                Domanda {Math.min(currentIndex + 1, QUIZ_QUESTIONS.length)} / {QUIZ_QUESTIONS.length}
+              </span>
+              <strong>{score} punti</strong>
+            </div>
+          </div>
+
+          <div className="quiz__body">
+            <h3>{currentQuestion.question}</h3>
+            <div className="quiz__options">
+              {currentQuestion.options.map((option, index) => {
+                const isSelected = selectedIndex === index
+                const isCorrect = currentQuestion.correctIndex === index
+                const showFeedback = selectedIndex !== null
+                const statusClass = showFeedback
+                  ? isCorrect
+                    ? 'is-correct'
+                    : isSelected
+                      ? 'is-wrong'
+                      : ''
+                  : ''
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`quiz__option ${statusClass}`}
+                    onClick={() => handleSelect(index)}
+                    disabled={selectedIndex !== null}
+                  >
+                    <span>{option}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="quiz__footer">
+            {selectedIndex !== null && (
+              <p className="quiz__feedback">
+                {selectedIndex === currentQuestion.correctIndex
+                  ? 'Risposta corretta!'
+                  : `Risposta sbagliata. Corretta: ${currentQuestion.options[currentQuestion.correctIndex]}.`}
+              </p>
+            )}
+
+            {!isFinished ? (
+              <button className="cta" type="button" onClick={handleNext} disabled={selectedIndex === null}>
+                {currentIndex === QUIZ_QUESTIONS.length - 1 ? 'Mostra risultato' : 'Prossima domanda'}
+              </button>
+            ) : (
+              <div className="quiz__result">
+                <p>
+                  Hai totalizzato <strong>{score}</strong> risposte corrette su{' '}
+                  <strong>{QUIZ_QUESTIONS.length}</strong>.
+                </p>
+                <button className="cta" type="button" onClick={handleRestart}>
+                  Ricomincia il quiz
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}
+
+export default App
